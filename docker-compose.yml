@@ -1,0 +1,73 @@
+version: '3'
+
+volumes:
+    database-data:
+networks:
+    open-source-bazaar:
+
+services:
+    postgres:
+        image: postgres
+        environment:
+            - POSTGRES_PASSWORD=${APP_SECRET}
+        volumes:
+            - database-data:/var/lib/postgresql/data/
+        networks:
+            - open-source-bazaar
+        restart: always
+    activityhub-service:
+        depends_on:
+            - postgres
+        image: open-source-bazaar/activityhub-service
+        environment:
+            - NODE_ENV=production
+            - DATABASE_URL=postgres://postgres:${APP_SECRET}@postgres:5432/postgres
+            - PORT=8080
+        networks:
+            - open-source-bazaar
+        healthcheck:
+            test: ['CMD-SHELL', 'curl -f http://localhost:8080/ || exit 1']
+            interval: 3s
+            retries: 5
+            start_period: 30s
+        labels:
+            - autoheal=true
+        restart: always
+    dashpress:
+        depends_on:
+            - postgres
+            - activityhub-service
+        image: luojiyin/dashpress:1.0
+        volumes:
+            - ./dashpress/app:/app
+        ports:
+            - 8081:3000
+        networks:
+            - open-source-bazaar
+        healthcheck:
+            test: ['CMD-SHELL', 'curl -f http://localhost:3000/ || exit 1']
+            interval: 3s
+            retries: 5
+            start_period: 30s
+        labels:
+            - autoheal=true
+        restart: always
+    autoheal:
+        image: willfarrell/autoheal:1.2.0
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        networks:
+            - open-source-bazaar
+        restart: always
+    caddy:
+        depends_on:
+            - activityhub-service
+        image: caddy
+        ports:
+            - 80:80
+            - 443:443
+        networks:
+            - open-source-bazaar
+        restart: always
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile
