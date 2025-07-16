@@ -1,0 +1,20 @@
+services:
+    - type: web
+      name: activityhub-service-server
+      plan: free
+      runtime: node
+      buildCommand: npm install  &&  npm run build
+      startCommand: npm start
+      healthCheckPath: /_health
+      envVars:
+          - key: NODE_VERSION
+            value: 22
+          - key: NODE_ENV
+            value: production
+          - key: DATABASE_URL
+            fromDatabase:
+                name: activityhub-service-data
+                property: connectionString
+databases:
+    - name: activityhub-service-data
+      plan: free
