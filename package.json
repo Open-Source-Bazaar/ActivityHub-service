@@ -103,10 +103,10 @@
     "scripts": {
         "install": "cp -u .env.example .env  ||  true",
         "prepare": "husky || true",
-        "dev": "cross-env TS_NODE_TRANSPILE_ONLY=true  node -r ts-node/register --watch source/",
+        "dev": "cross-env TS_NODE_TRANSPILE_ONLY=true  node -r ts-node/register --watch source/WebServer.ts",
         "lint": "lint-staged",
         "build-test": "swagger-typescript-api generate -p http://localhost:8080/docs/spec -o test/ -n client.ts",
-        "start-test": "rm -rf .data/  &&  node dist/",
+        "start-test": "rm -rf .data/  &&  node dist/WebServer.js",
         "jest": "jest",
         "debug": "server-test start-test 8080 jest",
         "test": "npm run build  &&  server-test start-test 8080 build-test  &&  npm run debug",

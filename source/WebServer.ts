@@ -1,62 +1,44 @@
 import 'reflect-metadata';
+
 import Koa from 'koa';
-import Logger from 'koa-logger';
-import { init, koa2, Cloud } from 'leanengine';
+import jwt from 'koa-jwt';
+import KoaLogger from 'koa-logger';
 import { useKoaServer } from 'routing-controllers';
+import { ProxyAgent, setGlobalDispatcher } from 'undici';
 
-import MainController from './controller/Main';
-import SessionController from './controller/Session';
-import { UserController } from './controller/User';
 import {
-    ActivityController,
-    ActiviySessionController,
-    SessionSubmitController,
-    CooperationController
-} from './controller/Activity';
-import {
-    OrganizationController,
-    PlaceController
-} from './controller/Organization';
+    BaseController,
+    controllers,
+    mocker,
+    swagger,
+    UserController
+} from './controller';
+import { dataSource } from './model';
+import { APP_SECRET, HTTP_PROXY, isProduct, PORT } from './utility';
 
-const {
-    LEANCLOUD_APP_ID: appId,
-    LEANCLOUD_APP_KEY: appKey,
-    LEANCLOUD_APP_MASTER_KEY: masterKey,
-    PORT,
-    LEANCLOUD_APP_PORT: appPort
-} = process.env;
+if (HTTP_PROXY) setGlobalDispatcher(new ProxyAgent(HTTP_PROXY));
 
-const port = parseInt(appPort || PORT || '8080');
+const HOST = `localhost:${PORT}`,
+    app = new Koa()
+        .use(KoaLogger())
+        .use(swagger({ exposeSpec: true }))
+        .use(jwt({ secret: APP_SECRET, passthrough: true }));
 
-init({ appId, appKey, masterKey });
-
-const app = new Koa()
-    .use(Logger())
-    .use(koa2())
-    .use(
-        // @ts-ignore
-        Cloud.CookieSession({
-            framework: 'koa2',
-            secret: appKey,
-            fetchUser: true
-        })
-    );
+if (!isProduct) app.use(mocker());
 
 useKoaServer(app, {
-    cors: { credentials: true },
-    controllers: [
-        CooperationController,
-        SessionSubmitController,
-        ActiviySessionController,
-        ActivityController,
-        PlaceController,
-        OrganizationController,
-        UserController,
-        SessionController,
-        MainController
-    ]
+    controllers,
+    cors: true,
+    authorizationChecker: action => !!UserController.getSession(action),
+    currentUserChecker: UserController.getSession
 });
 
-app.listen(port, () =>
-    console.log('HTTP Server runs at http://localhost:' + port)
+console.time('Server boot');
+
+dataSource.initialize().then(() =>
+    app.listen(PORT, () => {
+        console.log(BaseController.entryOf(HOST));
+
+        console.timeEnd('Server boot');
+    })
 );
