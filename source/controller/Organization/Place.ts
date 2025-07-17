@@ -1,89 +1,76 @@
-import { Object as LCObject, Query } from 'leanengine';
 import {
     JsonController,
     Post,
-    Ctx,
+    CurrentUser,
     Param,
     Body,
     Get,
-    Patch,
-    UnauthorizedError,
-    QueryParam
+    Put,
+    Authorized,
+    QueryParams
 } from 'routing-controllers';
+import { ResponseSchema } from 'routing-controllers-openapi';
 
-import { LCContext, createAdminACL } from '../../utility';
-import { PlaceModel } from '../../model/Organization';
+import { BaseFilter, Organization, Place, PlaceListChunk, User, dataSource } from '../../model';
+import { searchConditionOf } from '../../utility';
+import { ActivityLogController } from '../ActivityLog';
 import { OrganizationController } from './Organization';
 
-export class Place extends LCObject {}
+const placeStore = dataSource.getRepository(Place);
 
 @JsonController('/organization')
 export class PlaceController {
     @Post('/:oid/place')
-    async create(
-        @Ctx() { currentUser }: LCContext,
-        @Param('oid') oid: string,
-        @Body() { address, ...rest }: PlaceModel
-    ) {
-        await OrganizationController.assertAdmin(currentUser, oid);
+    @Authorized()
+    @ResponseSchema(Place)
+    async create(@CurrentUser() createdBy: User, @Param('oid') oid: number, @Body() body: Place) {
+        await OrganizationController.assertAdmin(createdBy, oid);
 
-        const place = new Place(),
-            organization = LCObject.createWithoutData('Organization', oid);
+        const place = await placeStore.save({ ...body, organization: { id: oid }, createdBy });
 
-        if (!address) {
-            await organization.fetch();
+        await ActivityLogController.logCreate(createdBy, 'Place', place.id);
 
-            address = organization.get('address');
-        }
-
-        await place.setACL(await createAdminACL(currentUser, oid)).save({
-            ...rest,
-            address,
-            organization
-        });
-
-        return place.toJSON();
+        return place;
     }
 
-    @Get('/place/:id')
-    async getOne(@Param('id') id: string) {
-        const place = await new Query(Place).get(id);
-
-        return place.toJSON();
+    @Get('/:oid/place/:id')
+    @ResponseSchema(Place)
+    getOne(@Param('id') id: number) {
+        return placeStore.findOneBy({ id });
     }
 
-    @Patch('/:oid/place/:id')
+    @Put('/:oid/place/:id')
+    @Authorized()
+    @ResponseSchema(Place)
     async edit(
-        @Ctx() { currentUser }: LCContext,
-        @Param('oid') oid: string,
-        @Param('id') id: string,
-        @Body() body: PlaceModel
+        @CurrentUser() updatedBy: User,
+        @Param('oid') oid: number,
+        @Param('id') id: number,
+        @Body() body: Place
     ) {
-        if (!currentUser) throw new UnauthorizedError();
+        await OrganizationController.assertAdmin(updatedBy, oid);
 
-        const place = LCObject.createWithoutData('Place', id);
+        const place = await placeStore.save({ ...body, id, updatedBy });
 
-        await place.save({
-            ...body,
-            organization: LCObject.createWithoutData('Organization', oid)
-        });
+        await ActivityLogController.logUpdate(updatedBy, 'Place', place.id);
 
-        return place.toJSON();
+        return place;
     }
 
     @Get('/:oid/place')
-    getList(
-        @Param('oid') oid: string,
-        @QueryParam('pageSize') pageSize = 10,
-        @QueryParam('pageIndex') pageIndex = 1
+    @ResponseSchema(PlaceListChunk)
+    async getList(
+        @Param('oid') oid: number,
+        @QueryParams() { keywords, pageSize = 10, pageIndex = 1 }: BaseFilter
     ) {
-        return new Query(Place)
-            .equalTo(
-                'organization',
-                LCObject.createWithoutData('Organization', oid)
-            )
-            .limit(pageSize)
-            .skip(pageSize * --pageIndex)
-            .find();
+        const where = searchConditionOf<Place>(['name', 'address'], keywords, {
+            organization: { id: oid }
+        });
+        const [list, count] = await placeStore.findAndCount({
+            where,
+            skip: pageSize * (pageIndex - 1),
+            take: pageSize
+        });
+        return { list, count };
     }
 }
