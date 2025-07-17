@@ -1,183 +1,149 @@
-import { Object as LCObject, Query, ACL, User, Role } from 'leanengine';
 import {
     JsonController,
-    UnauthorizedError,
+    Authorized,
     ForbiddenError,
     Post,
-    Ctx,
+    CurrentUser,
+    QueryParams,
     Body,
     Get,
     Param,
     QueryParam,
-    Patch,
-    BadRequestError,
+    Put,
+    HttpCode,
     OnUndefined,
     Delete
 } from 'routing-controllers';
+import { ResponseSchema } from 'routing-controllers-openapi';
 
-import { LCContext } from '../../utility';
 import {
-    OrganizationModel,
+    Organization,
+    OrganizationListChunk,
     MemberRole,
-    MemberModel
-} from '../../model/Organization';
+    Membership,
+    User,
+    BaseFilter,
+    dataSource
+} from '../../model';
+import { searchConditionOf } from '../../utility';
+import { ActivityLogController } from '../ActivityLog';
 
-export class Organization extends LCObject {}
+const organizationStore = dataSource.getRepository(Organization),
+    memberStore = dataSource.getRepository(Membership);
 
 @JsonController('/organization')
 export class OrganizationController {
-    static async assertAdmin(user: User, oid: string) {
-        if (!user) throw new UnauthorizedError();
+    static async assertAdmin(user: User, id: number) {
+        const authorized = await organizationStore.existsBy({ id, members: { user } });
 
-        const isAdmin = (await user.getRoles()).find(
-            role => role.getName().split('_')[0] === oid
-        );
-
-        if (!isAdmin) throw new ForbiddenError();
+        if (!authorized)
+            throw new ForbiddenError(
+                `You have no permission to access the organization with ID "${id}".`
+            );
     }
 
-    createRole(user: User, name: string) {
-        const acl = new ACL();
+    static async addMember({ organization, user, roleType }: Partial<Membership>, createdBy: User) {
+        await OrganizationController.assertAdmin(createdBy, organization.id);
 
-        acl.setPublicReadAccess(true),
-            acl.setPublicWriteAccess(false),
-            acl.setWriteAccess(user, true);
+        const member = await memberStore.save({ organization, user, roleType, createdBy });
 
-        return new Role(name, acl);
+        await ActivityLogController.logCreate(createdBy, 'Membership', member.id);
+
+        return member;
+    }
+
+    createMember(user: User, role = MemberRole.Admin) {
+        const member = new Membership();
+        member.user = user;
+        member.roleType = role;
+
+        return member;
     }
 
     @Post()
-    async create(
-        @Ctx() { currentUser }: LCContext,
-        @Body() body: OrganizationModel
-    ) {
-        if (!currentUser) throw new UnauthorizedError();
+    @Authorized()
+    @HttpCode(201)
+    @ResponseSchema(Organization)
+    async create(@CurrentUser() createdBy: User, @Body() body: Organization) {
+        const organization = await organizationStore.save({
+            ...body,
+            createdBy,
+            members: [this.createMember(createdBy)]
+        });
+        await ActivityLogController.logCreate(createdBy, 'Organization', organization.id);
 
-        const organization = new Organization();
-
-        await organization.save(body);
-
-        const admin = this.createRole(
-            currentUser,
-            `${organization.id}_${MemberRole.Admin}`
-        );
-        admin.getUsers().add(currentUser);
-        await admin.save();
-
-        await this.createRole(
-            currentUser,
-            `${organization.id}_${MemberRole.Worker}`
-        ).save();
-
-        const acl = new ACL();
-
-        acl.setPublicReadAccess(true),
-            acl.setPublicWriteAccess(false),
-            acl.setRoleWriteAccess(admin, true);
-
-        await organization.setACL(acl).save();
-
-        return organization.toJSON();
+        return organization;
     }
 
     @Get('/:id')
-    async getOne(@Param('id') id: string) {
-        const organization = await new Query(Organization).get(id);
-
-        return organization.toJSON();
+    @ResponseSchema(Organization)
+    getOne(@Param('id') id: number) {
+        return organizationStore.findOneBy({ id });
     }
 
     @Get()
-    getList(
-        @QueryParam('pageSize') pageSize = 10,
-        @QueryParam('pageIndex') pageIndex = 1
-    ) {
-        return new Query(Organization)
-            .limit(pageSize)
-            .skip(pageSize * --pageIndex)
-            .find();
+    @ResponseSchema(OrganizationListChunk)
+    async getList(@QueryParams() { keywords, pageSize = 10, pageIndex = 1 }: BaseFilter) {
+        const where = searchConditionOf<Organization>(['name', 'englishName', 'summary'], keywords);
+
+        const [list, count] = await organizationStore.findAndCount({
+            where,
+            skip: pageSize * (pageIndex - 1),
+            take: pageSize
+        });
+        return { list, count };
     }
 
-    @Patch('/:id')
+    @Put('/:id')
+    @Authorized()
+    @ResponseSchema(Organization)
     async edit(
-        @Ctx() { currentUser }: LCContext,
-        @Param('id') id: string,
-        @Body() body: OrganizationModel
+        @CurrentUser() updatedBy: User,
+        @Param('id') id: number,
+        @Body() body: Organization
     ) {
-        if (!currentUser) throw new UnauthorizedError();
+        await OrganizationController.assertAdmin(updatedBy, id);
 
-        const duplicate = await Query.or(
-            new Query(Organization).equalTo('name', body.name),
-            new Query(Organization).equalTo('englishName', body.englishName)
-        ).first();
+        const organization = await organizationStore.save({ ...body, id, updatedBy });
 
-        if (duplicate) throw new BadRequestError();
+        await ActivityLogController.logUpdate(updatedBy, 'Organization', organization.id);
 
-        const organization = LCObject.createWithoutData('Organization', id);
-
-        await organization.set(body).save();
-
-        return organization.toJSON();
+        return organization;
     }
 
     @Post('/:id/member')
-    @OnUndefined(201)
-    async addMember(
-        @Ctx() { currentUser }: LCContext,
-        @Param('id') id: string,
-        @Body() { roleType, userId }: MemberModel
-    ) {
-        if (!currentUser) throw new UnauthorizedError();
-
-        const role = await new Query(Role)
-            .equalTo('name', `${id}_${roleType}`)
-            .first();
-
-        if (!role) throw new BadRequestError();
-
-        role.getUsers().add(LCObject.createWithoutData('_User', userId));
-
-        await role.save();
+    @Authorized()
+    @HttpCode(201)
+    @ResponseSchema(Membership)
+    addMember(@CurrentUser() createdBy: User, @Param('id') id: number, @Body() body: Membership) {
+        return OrganizationController.addMember(
+            { ...body, organization: Organization.from<Organization>(id) },
+            createdBy
+        );
     }
 
-    @Delete('/:id/member')
+    @Delete('/:id/member/:mid')
+    @Authorized()
     @OnUndefined(204)
     async deleteMember(
-        @Ctx() { currentUser }: LCContext,
-        @Param('id') id: string,
-        @Body() { roleType, userId }: MemberModel
+        @CurrentUser() deletedBy: User,
+        @Param('id') id: number,
+        @Param('mid') mid: number
     ) {
-        if (!currentUser) throw new UnauthorizedError();
+        await OrganizationController.assertAdmin(deletedBy, id);
 
-        const role = await new Query(Role)
-            .equalTo('name', `${id}_${roleType}`)
-            .first();
+        await memberStore.update({ id: mid }, { deletedBy });
+        await memberStore.softDelete(mid);
 
-        if (!role) throw new BadRequestError();
-
-        role.getUsers().remove(LCObject.createWithoutData('_User', userId));
-
-        await role.save();
+        await ActivityLogController.logDelete(deletedBy, 'Membership', mid);
     }
 
     @Get('/:id/member')
-    async getMemberList(
-        @Param('id') id: string,
-        @QueryParam('roleType') roleType = ''
-    ) {
-        const roles = await new Query(Role)
-            .startsWith('name', `${id}_${roleType}`)
-            .find();
-
-        const users = await Promise.all(
-            roles.map(role =>
-                role
-                    .getUsers()
-                    .query()
-                    .find()
-            )
-        );
-
-        return users.flat();
+    @ResponseSchema(Membership, { isArray: true })
+    getMemberList(@Param('id') id: number, @QueryParam('roleType') roleType?: MemberRole) {
+        return memberStore.find({
+            where: { organization: { id }, ...(roleType ? { roleType } : {}) },
+            relations: ['user']
+        });
     }
 }
