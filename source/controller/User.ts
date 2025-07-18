@@ -19,15 +19,7 @@ import {
 } from 'routing-controllers';
 import { ResponseSchema } from 'routing-controllers-openapi';
 
-import {
-    dataSource,
-    JWTAction,
-    Role,
-    SignInData,
-    User,
-    UserFilter,
-    UserListChunk
-} from '../model';
+import { dataSource, JWTAction, Role, SignInData, User, UserFilter, UserListChunk } from '../model';
 import { APP_SECRET, searchConditionOf, supabase } from '../utility';
 import { ActivityLogController } from './ActivityLog';
 
@@ -60,9 +52,7 @@ export class UserController {
     }
 
     static getSession = ({ context: { state } }: JWTAction) =>
-        'user' in state
-            ? state.user
-            : (console.error(state.jwtOriginalError), null);
+        'user' in state ? state.user : (console.error(state.jwtOriginalError), null);
 
     @Post('/session/email/:email/OTP')
     @OnUndefined(204)
@@ -118,10 +108,7 @@ export class UserController {
         @CurrentUser() updatedBy: User,
         @Body() { password, ...data }: User
     ) {
-        if (
-            !updatedBy.roles.includes(Role.Administrator) &&
-            id !== updatedBy.id
-        )
+        if (!updatedBy.roles.includes(Role.Administrator) && id !== updatedBy.id)
             throw new ForbiddenError();
 
         const saved = await store.save({
@@ -138,7 +125,7 @@ export class UserController {
     @OnNull(404)
     @ResponseSchema(User)
     getOne(@Param('id') id: number) {
-        return store.findOne({ where: { id } });
+        return store.findOneBy({ id });
     }
 
     @Delete('/:id')
@@ -155,9 +142,7 @@ export class UserController {
 
     @Get()
     @ResponseSchema(UserListChunk)
-    async getList(
-        @QueryParams() { gender, keywords, pageSize, pageIndex }: UserFilter
-    ) {
+    async getList(@QueryParams() { gender, keywords, pageSize, pageIndex }: UserFilter) {
         const where = searchConditionOf<User>(
             ['email', 'mobilePhone', 'name'],
             keywords,

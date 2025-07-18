@@ -1,117 +1,94 @@
-import { Object as LCObject, User, Query, Role, ACL } from 'leanengine';
 import {
-    JsonController,
-    Post,
-    Ctx,
+    Authorized,
     Body,
-    UnauthorizedError,
+    CurrentUser,
+    ForbiddenError,
     Get,
+    HttpCode,
+    JsonController,
+    OnNull,
     Param,
-    Patch,
-    QueryParam,
-    ForbiddenError
+    Post,
+    Put,
+    QueryParams
 } from 'routing-controllers';
+import { ResponseSchema } from 'routing-controllers-openapi';
 
-import { LCContext, createAdminACL } from '../../utility';
-import { MemberRole } from '../../model/Organization';
-import { ActivityModel } from '../../model/Activity';
+import { Activity, ActivityListChunk, BaseFilter, dataSource, MemberRole, User } from '../../model';
+import { searchConditionOf } from '../../utility';
+import { ActivityLogController } from '../ActivityLog';
+import { OrganizationController } from '../Organization';
 
-export class Activity extends LCObject {}
+const activityStore = dataSource.getRepository(Activity);
 
 @JsonController('/activity')
 export class ActivityController {
-    static async assertAdmin(aid: string, user: User) {
-        const activity = await new Query(Activity).get(aid);
-
-        const organization = activity.get('organization');
-
-        const isAdmin = organization
-            ? (await user.getRoles()).find(
-                  role =>
-                      role.getName() ===
-                      `${organization.id}_${MemberRole.Admin}`
-              )
-            : activity.get('owner').id === user.id;
-
-        if (isAdmin) return activity;
+    static async assertAdmin(id: number, user: User) {
+        const activity =
+            (await activityStore.findOneBy({ id, createdBy: user })) ||
+            (await activityStore.findOneBy({
+                id,
+                organization: { members: { user, roleType: MemberRole.Admin } }
+            }));
+        if (activity) return activity;
 
         throw new ForbiddenError();
     }
 
-    static async setAdminACL(activity: Activity, acl: ACL) {
-        const organization = activity.get('organization');
-
-        if (organization)
-            acl.setRoleWriteAccess(
-                await new Query(Role)
-                    .equalTo('name', `${organization.id}_${MemberRole.Admin}`)
-                    .first(),
-                true
-            );
-        else acl.setWriteAccess(activity.get('owner'), true);
+    static setAdminACL({ organization }: Activity, user: User, createdBy: User) {
+        return OrganizationController.addMember(
+            { organization, user, roleType: MemberRole.Admin },
+            createdBy
+        );
     }
 
     @Post()
+    @Authorized()
+    @HttpCode(201)
+    @ResponseSchema(Activity)
     async create(
-        @Ctx() { currentUser }: LCContext,
-        @Body() { startTime, endTime, organizationId, ...rest }: ActivityModel
-    ): Promise<ActivityModel> {
-        if (!currentUser) throw new UnauthorizedError();
+        @CurrentUser() createdBy: User,
+        @Body() { organization, ...rest }: Activity
+    ): Promise<Activity> {
+        await OrganizationController.assertAdmin(createdBy, organization.id);
 
-        const activity = new Activity().setACL(
-            await createAdminACL(currentUser, organizationId)
-        );
+        const activity = await activityStore.save({ ...rest, organization, createdBy });
 
-        await activity.save({
-            ...rest,
-            startTime: new Date(startTime),
-            endTime: new Date(endTime),
-            owner: currentUser,
-            organization:
-                organizationId &&
-                LCObject.createWithoutData('Organization', organizationId)
-        });
+        await ActivityLogController.logCreate(createdBy, 'Activity', activity.id);
 
-        return activity.toJSON();
+        return activity;
     }
 
     @Get('/:id')
-    async getOne(@Param('id') id: string): Promise<ActivityModel> {
-        const activity = await new Query(Activity).get(id);
-
-        return activity.toJSON();
+    @OnNull(404)
+    @ResponseSchema(Activity)
+    getOne(@Param('id') id: number) {
+        return activityStore.findOneBy({ id });
     }
 
-    @Patch('/:id')
-    async edit(
-        @Ctx() { currentUser }: LCContext,
-        @Param('id') id: string,
-        @Body() { startTime, endTime, ...rest }: ActivityModel
-    ): Promise<ActivityModel> {
-        if (!currentUser) throw new UnauthorizedError();
+    @Put('/:id')
+    @Authorized()
+    @ResponseSchema(Activity)
+    async edit(@CurrentUser() updatedBy: User, @Param('id') id: number, @Body() body: Activity) {
+        await ActivityController.assertAdmin(id, updatedBy);
 
-        const activity = LCObject.createWithoutData('Activity', id);
+        const activity = await activityStore.save({ ...body, updatedBy });
 
-        await activity
-            .set({
-                ...rest,
-                startTime: new Date(startTime),
-                endTime: new Date(endTime),
-                owner: currentUser
-            })
-            .save();
+        await ActivityLogController.logUpdate(updatedBy, 'Activity', activity.id);
 
-        return activity.toJSON();
+        return activity;
     }
 
     @Get()
-    getList(
-        @QueryParam('pageSize') pageSize = 10,
-        @QueryParam('pageIndex') pageIndex = 1
-    ) {
-        return new Query(Activity)
-            .limit(pageSize)
-            .skip(pageSize * --pageIndex)
-            .find();
+    @ResponseSchema(ActivityListChunk)
+    async getList(@QueryParams() { keywords, pageSize = 10, pageIndex = 1 }: BaseFilter) {
+        const where = searchConditionOf<Activity>(['title', 'address'], keywords);
+
+        const [list, count] = await activityStore.findAndCount({
+            where,
+            skip: pageSize * (pageIndex - 1),
+            take: pageSize
+        });
+        return { list, count };
     }
 }

@@ -1,10 +1,17 @@
-import { Length, Matches, IsUrl, IsInt, Min, ValidateNested, IsOptional } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import {
+    IsEnum,
+    IsInt,
+    IsOptional,
+    IsUrl,
+    Length,
+    Matches,
+    Min,
+    ValidateNested} from 'class-validator';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 import { ListChunk } from '../Base';
-import { UserBase } from '../User';
-import { Membership } from './Membership';
+import { User, UserBase } from '../User';
 
 @Entity()
 export class Organization extends UserBase {
@@ -52,4 +59,23 @@ export class OrganizationListChunk implements ListChunk<Organization> {
     @Type(() => Organization)
     @ValidateNested({ each: true })
     list: Organization[];
+}
+
+export enum MemberRole {
+    Admin,
+    Worker
+}
+
+@Entity()
+export class Membership extends OrganizationBase {
+    @Type(() => User)
+    @Transform(({ value }) => User.from(value))
+    @ValidateNested()
+    @IsOptional()
+    @ManyToOne(() => User)
+    user: User;
+
+    @IsEnum(MemberRole)
+    @Column({ type: 'simple-enum', enum: MemberRole })
+    roleType: MemberRole;
 }

@@ -1,29 +1,30 @@
 import {
-    JsonController,
     Authorized,
-    ForbiddenError,
-    Post,
-    CurrentUser,
-    QueryParams,
     Body,
+    CurrentUser,
+    Delete,
+    ForbiddenError,
     Get,
-    Param,
-    QueryParam,
-    Put,
     HttpCode,
+    JsonController,
+    OnNull,
     OnUndefined,
-    Delete
+    Param,
+    Post,
+    Put,
+    QueryParam,
+    QueryParams
 } from 'routing-controllers';
 import { ResponseSchema } from 'routing-controllers-openapi';
 
 import {
-    Organization,
-    OrganizationListChunk,
+    BaseFilter,
+    dataSource,
     MemberRole,
     Membership,
-    User,
-    BaseFilter,
-    dataSource
+    Organization,
+    OrganizationListChunk,
+    User
 } from '../../model';
 import { searchConditionOf } from '../../utility';
 import { ActivityLogController } from '../ActivityLog';
@@ -76,6 +77,7 @@ export class OrganizationController {
     }
 
     @Get('/:id')
+    @OnNull(404)
     @ResponseSchema(Organization)
     getOne(@Param('id') id: number) {
         return organizationStore.findOneBy({ id });
