@@ -1,89 +1,72 @@
-import { Object as LCObject, Query } from 'leanengine';
 import {
-    JsonController,
-    Post,
-    Ctx,
-    Param,
+    Authorized,
     Body,
+    CurrentUser,
     Get,
-    QueryParam,
+    HttpCode,
+    JsonController,
+    Param,
     Patch,
-    UnauthorizedError
+    Post,
+    QueryParams
 } from 'routing-controllers';
+import { ResponseSchema } from 'routing-controllers-openapi';
 
-import { LCContext, createAdminACL } from '../../utility';
-import { CooperationModel } from '../../model/Activity';
+import { BaseFilter, Cooperation, CooperationListChunk, dataSource, User } from '../../model';
+import { searchConditionOf } from '../../utility';
+import { ActivityLogController } from '../ActivityLog';
 import { ActivityController } from './Activity';
 
-export class Cooperation extends LCObject {}
+const cooperationStore = dataSource.getRepository(Cooperation);
 
 @JsonController('/activity')
 export class CooperationController {
     @Post('/:aid/cooperation')
+    @Authorized()
+    @HttpCode(201)
+    @ResponseSchema(Cooperation)
     async create(
-        @Ctx() { currentUser }: LCContext,
-        @Param('aid') aid: string,
-        @Body() { organizationId, contactId, ...rest }: CooperationModel
+        @CurrentUser() createdBy: User,
+        @Param('aid') aid: number,
+        @Body() body: Cooperation
     ) {
-        const activity = await ActivityController.assertAdmin(aid, currentUser);
+        const activity = await ActivityController.assertAdmin(aid, createdBy);
 
-        const cooperation = new Cooperation().setACL(
-            await createAdminACL(currentUser, activity.get('organization')?.id)
-        );
+        const cooperation = await cooperationStore.save({ ...body, activity, createdBy });
 
-        await cooperation.save({
-            ...rest,
-            activity,
-            organization: LCObject.createWithoutData(
-                'Organization',
-                organizationId
-            ),
-            contactUser: LCObject.createWithoutData('_User', contactId)
-        });
+        await ActivityLogController.logCreate(createdBy, 'Cooperation', cooperation.id);
 
-        return cooperation.toJSON();
+        return cooperation;
     }
 
     @Get('/:aid/cooperation')
-    async getList(
-        @Param('aid') aid: string,
-        @QueryParam('pageSize') pageSize = 10,
-        @QueryParam('pageIndex') pageIndex = 1
-    ) {
-        return new Query(Cooperation)
-            .equalTo('activity', LCObject.createWithoutData('Activity', aid))
-            .limit(pageSize)
-            .skip(pageSize * --pageIndex)
-            .find();
+    @ResponseSchema(CooperationListChunk)
+    async getList(@QueryParams() { keywords, pageSize = 10, pageIndex = 1 }: BaseFilter) {
+        const where = searchConditionOf<Cooperation>(['title'], keywords);
+
+        const [list, count] = await cooperationStore.findAndCount({
+            where,
+            skip: pageSize * (pageIndex - 1),
+            take: pageSize
+        });
+        return { list, count };
     }
 
     @Patch(':aid/cooperation/:id')
+    @Authorized()
+    @ResponseSchema(Cooperation)
     async edit(
-        @Ctx() { currentUser }: LCContext,
-        @Param('aid') aid: string,
-        @Param('id') id: string,
-        @Body() { organizationId, contactId, ...rest }: CooperationModel
+        @CurrentUser() updatedBy: User,
+        @Param('aid') aid: number,
+        @Param('id') id: number,
+        @Body() body: Cooperation
     ) {
-        if (!currentUser) throw new UnauthorizedError();
+        await ActivityController.assertAdmin(aid, updatedBy);
 
-        const cooperation = LCObject.createWithoutData(Cooperation, id).set(
-            rest
-        );
+        const cooperation = await cooperationStore.save({ ...body, id, updatedBy });
 
-        if (organizationId)
-            cooperation.set(
-                'organization',
-                LCObject.createWithoutData('Organization', organizationId)
-            );
+        await ActivityLogController.logUpdate(updatedBy, 'Cooperation', cooperation.id);
 
-        if (contactId)
-            cooperation.set(
-                'contactUser',
-                LCObject.createWithoutData('_User', contactId)
-            );
-
-        await cooperation.save();
-
-        return cooperation.toJSON();
+        return cooperation;
     }
 }

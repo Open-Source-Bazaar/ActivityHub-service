@@ -1,105 +1,102 @@
-import { Object as LCObject, Query } from 'leanengine';
 import {
-    JsonController,
-    Post,
-    Ctx,
-    UnauthorizedError,
-    Param,
+    Authorized,
     Body,
+    CurrentUser,
     Get,
-    Patch
+    HttpCode,
+    JsonController,
+    OnNull,
+    Param,
+    Post,
+    Put,
+    QueryParams
 } from 'routing-controllers';
+import { ResponseSchema } from 'routing-controllers-openapi';
 
-import { LCContext, createAdminACL } from '../../utility';
-import { SessionSubmitModel } from '../../model/Activity';
-import { ActiviySessionController } from './Session';
-import { Activity, ActivityController } from './Activity';
+import { BaseFilter, dataSource, SessionSubmit, SessionSubmitListChunk, User } from '../../model';
+import { ActivityLogController } from '../ActivityLog';
+import { ActivityController } from './Activity';
+import { ActivitySessionController } from './Session';
 
-export class SessionSubmit extends LCObject {}
+const sessionSubmitStore = dataSource.getRepository(SessionSubmit);
 
 @JsonController('/activity')
 export class SessionSubmitController {
     @Post('/session/:sid/submit')
+    @Authorized()
+    @HttpCode(201)
+    @ResponseSchema(SessionSubmit)
     async create(
-        @Ctx() { currentUser }: LCContext,
-        @Param('sid') sid: string,
-        @Body() { activityId, mentorIds = [], adopted }: SessionSubmitModel
+        @CurrentUser() createdBy: User,
+        @Param('sid') sid: number,
+        @Body() { activity, mentors = [] }: SessionSubmit
     ) {
-        if (!currentUser) throw new UnauthorizedError();
+        const session = await ActivitySessionController.assertOwner(sid, createdBy);
 
-        const session = await ActiviySessionController.assertOwner(
-            sid,
-            currentUser
-        );
-
-        const activity = await new Query(Activity).get(activityId),
-            acl = await createAdminACL(currentUser);
-
-        await ActivityController.setAdminACL(activity, acl);
-
-        const submit = new SessionSubmit().setACL(acl);
-
-        await submit.save({
+        const submit = await sessionSubmitStore.save({
             session,
             activity,
-            mentors: [
-                currentUser,
-                ...mentorIds.map(id => LCObject.createWithoutData('_User', id))
-            ],
+            mentors: [createdBy, ...mentors],
             adopted: false
         });
+        await ActivityLogController.logCreate(createdBy, 'SessionSubmit', submit.id);
 
-        return submit.toJSON();
+        return submit;
     }
 
     @Get('/session/submit/:id')
-    async getOne(@Param('id') id: string) {
-        const submit = await new Query(SessionSubmit).get(id);
-
-        return submit.toJSON();
+    @OnNull(404)
+    @ResponseSchema(SessionSubmit)
+    getOne(@Param('id') id: number) {
+        return sessionSubmitStore.findOneBy({ id });
     }
 
-    @Patch('/session/submit/:id')
+    @Put('/session/submit/:id')
+    @Authorized()
+    @ResponseSchema(SessionSubmit)
     async edit(
-        @Ctx() { currentUser }: LCContext,
-        @Param('id') id: string,
-        @Body() { activityId, mentorIds = [], adopted }: SessionSubmitModel
+        @CurrentUser() updatedBy: User,
+        @Param('id') id: number,
+        @Body() { activity, mentors = [] }: SessionSubmit
     ) {
-        if (!currentUser) throw new UnauthorizedError();
+        await ActivitySessionController.assertOwner(id, updatedBy);
 
-        const submit = LCObject.createWithoutData('SessionSubmit', id);
-
-        await submit.save({
-            activity: LCObject.createWithoutData('Activity', activityId),
-            mentors: [
-                currentUser,
-                ...mentorIds.map(id => LCObject.createWithoutData('_User', id))
-            ]
+        const submit = await sessionSubmitStore.save({
+            id,
+            updatedBy,
+            activity,
+            mentors: [updatedBy, ...mentors]
         });
+        await ActivityLogController.logUpdate(updatedBy, 'SessionSubmit', submit.id);
 
-        return submit.toJSON();
+        return submit;
     }
 
     @Get('/:aid/session/submit')
-    getList(@Param('aid') aid: string) {
-        return new Query(SessionSubmit)
-            .equalTo('activity', LCObject.createWithoutData('Activity', aid))
-            .find();
+    @ResponseSchema(SessionSubmitListChunk)
+    async getList(@QueryParams() { pageSize = 10, pageIndex = 1 }: BaseFilter) {
+        const [list, count] = await sessionSubmitStore.findAndCount({
+            skip: pageSize * (pageIndex - 1),
+            take: pageSize
+        });
+        return { list, count };
     }
 
-    @Patch('/:aid/session/submit/:id')
+    @Put('/:aid/session/submit/:id')
+    @Authorized()
+    @ResponseSchema(SessionSubmit)
     async adopt(
-        @Ctx() { currentUser }: LCContext,
-        @Param('aid') aid: string,
-        @Param('id') id: string,
-        @Body() { adopted }: SessionSubmitModel
+        @CurrentUser() updatedBy: User,
+        @Param('aid') aid: number,
+        @Param('id') id: number,
+        @Body() { adopted }: SessionSubmit
     ) {
-        if (!currentUser) throw new UnauthorizedError();
+        await ActivityController.assertAdmin(aid, updatedBy);
 
-        const submit = LCObject.createWithoutData('SessionSubmit', id);
+        const submit = await sessionSubmitStore.save({ id, updatedBy, adopted });
 
-        await submit.save({ adopted });
+        await ActivityLogController.logUpdate(updatedBy, 'SessionSubmit', submit.id);
 
-        return submit.toJSON();
+        return submit;
     }
 }

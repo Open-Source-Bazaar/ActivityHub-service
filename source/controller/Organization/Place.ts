@@ -1,17 +1,18 @@
 import {
-    JsonController,
-    Post,
-    CurrentUser,
-    Param,
-    Body,
-    Get,
-    Put,
     Authorized,
+    Body,
+    CurrentUser,
+    Get,
+    JsonController,
+    OnNull,
+    Param,
+    Post,
+    Put,
     QueryParams
 } from 'routing-controllers';
 import { ResponseSchema } from 'routing-controllers-openapi';
 
-import { BaseFilter, Organization, Place, PlaceListChunk, User, dataSource } from '../../model';
+import { BaseFilter, dataSource, Organization, Place, PlaceListChunk, User } from '../../model';
 import { searchConditionOf } from '../../utility';
 import { ActivityLogController } from '../ActivityLog';
 import { OrganizationController } from './Organization';
@@ -34,6 +35,7 @@ export class PlaceController {
     }
 
     @Get('/:oid/place/:id')
+    @OnNull(404)
     @ResponseSchema(Place)
     getOne(@Param('id') id: number) {
         return placeStore.findOneBy({ id });

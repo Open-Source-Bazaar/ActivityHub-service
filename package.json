@@ -18,15 +18,15 @@
         "node": ">=22"
     },
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.844.0",
-        "@aws-sdk/s3-request-presigner": "^3.844.0",
+        "@aws-sdk/client-s3": "^3.848.0",
+        "@aws-sdk/s3-request-presigner": "^3.848.0",
         "@koa/cors": "^5.0.0",
         "@koa/multer": "^4.0.0",
         "@koa/router": "^13.1.1",
         "@passwordless-id/webauthn": "^2.3.1",
-        "@smithy/smithy-client": "^4.4.6",
-        "@supabase/auth-js": "^2.70.0",
-        "@supabase/supabase-js": "^2.50.4",
+        "@smithy/smithy-client": "^4.4.8",
+        "@supabase/auth-js": "^2.71.1",
+        "@supabase/supabase-js": "^2.52.0",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.2",
         "cross-env": "^7.0.3",
@@ -39,7 +39,7 @@
         "koa-mount": "^4.2.0",
         "koa2-swagger-ui": "^5.11.0",
         "koagger": "^0.4.0",
-        "marked": "^16.0.0",
+        "marked": "^16.1.1",
         "mobx-github": "^0.3.11",
         "mobx-restful": "^2.1.0",
         "pg": "^8.16.3",
@@ -49,21 +49,21 @@
         "routing-controllers-openapi": "^5.0.0",
         "tslib": "^2.8.1",
         "typeorm": "^0.3.25",
-        "undici": "^7.11.0",
+        "undici": "^7.12.0",
         "web-utility": "^4.4.3"
     },
     "devDependencies": {
-        "@eslint/js": "^9.30.1",
+        "@eslint/js": "^9.31.0",
         "@octokit/openapi-types": "^25.1.0",
         "@types/eslint-config-prettier": "^6.11.3",
         "@types/jest": "^29.5.14",
         "@types/jsonwebtoken": "^9.0.10",
         "@types/koa": "^2.15.0",
         "@types/koa-logger": "^3.1.5",
-        "@types/node": "^22.16.2",
+        "@types/node": "^22.16.4",
         "better-sqlite3": "^12.2.0",
-        "eslint": "^9.30.1",
-        "eslint-config-prettier": "^10.1.5",
+        "eslint": "^9.31.0",
+        "eslint-config-prettier": "^10.1.7",
         "eslint-plugin-simple-import-sort": "^12.1.1",
         "globals": "^16.3.0",
         "husky": "^9.1.7",
@@ -77,14 +77,15 @@
         "ts-jest": "^29.4.0",
         "ts-node": "^10.9.2",
         "typescript": "~5.8.3",
-        "typescript-eslint": "^8.36.0"
+        "typescript-eslint": "^8.37.0"
     },
     "resolutions": {
         "reflect-metadata": "$reflect-metadata"
     },
     "pnpm": {
         "onlyBuiltDependencies": [
-            "better-sqlite3"
+            "better-sqlite3",
+            "eslint-config-prettier"
         ]
     },
     "prettier": {

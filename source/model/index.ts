@@ -3,14 +3,18 @@ import { DataSource } from 'typeorm';
 import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionOptions';
 
 import { DATABASE_URL, isProduct } from '../utility';
+import { Activity, Cooperation, Session, SessionSubmit } from './Activity';
 import { ActivityLog } from './ActivityLog';
+import { Membership, Organization, Place } from './Organization';
 import { User } from './User';
 import { UserCredential } from './WebAuthn';
 
+export * from './Activity';
 export * from './ActivityLog';
 export * from './Base';
 export * from './File';
 export * from './OAuth';
+export * from './Organization';
 export * from './User';
 export * from './WebAuthn';
 
@@ -18,13 +22,26 @@ const { ssl, host, port, user, password, database } = isProduct
     ? parse(DATABASE_URL)
     : ({} as ConnectionOptions);
 
+const entities = [
+    User,
+    UserCredential,
+    ActivityLog,
+    Place,
+    Organization,
+    Membership,
+    Activity,
+    Cooperation,
+    Session,
+    SessionSubmit
+];
+
 const commonOptions: Pick<
     SqliteConnectionOptions,
     'logging' | 'synchronize' | 'entities' | 'migrations'
 > = {
     logging: true,
     synchronize: true,
-    entities: [User, UserCredential, ActivityLog],
+    entities,
     migrations: [`${isProduct ? '.data' : 'migration'}/*.ts`]
 };
 
@@ -40,7 +57,7 @@ export const dataSource = isProduct
           ...commonOptions
       })
     : new DataSource({
-          type: 'sqlite',
+          type: 'better-sqlite3',
           database: '.data/test.db',
           ...commonOptions
       });

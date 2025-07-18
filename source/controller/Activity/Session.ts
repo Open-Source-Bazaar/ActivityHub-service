@@ -1,28 +1,27 @@
-import { Object as LCObject, Query, User } from 'leanengine';
 import {
-    JsonController,
-    Post,
-    Ctx,
+    Authorized,
     Body,
-    UnauthorizedError,
+    CurrentUser,
+    ForbiddenError,
     Get,
+    HttpCode,
+    JsonController,
+    OnNull,
     Param,
-    Patch,
-    ForbiddenError
+    Post,
+    Put
 } from 'routing-controllers';
+import { ResponseSchema } from 'routing-controllers-openapi';
 
-import { LCContext, createAdminACL } from '../../utility';
-import { SessionModel } from '../../model/Activity';
+import { dataSource, Session, User } from '../../model';
+import { ActivityLogController } from '../ActivityLog';
 
-export class Session extends LCObject {}
+const sessionStore = dataSource.getRepository(Session);
 
 @JsonController('/activity/session')
-export class ActiviySessionController {
-    static async assertOwner(id: string, user: User) {
-        const session = await new Query(Session)
-            .equalTo('id', id)
-            .equalTo('owner', user)
-            .first();
+export class ActivitySessionController {
+    static async assertOwner(id: number, createdBy: User) {
+        const session = await sessionStore.findOneBy({ id, createdBy });
 
         if (session) return session;
 
@@ -30,38 +29,34 @@ export class ActiviySessionController {
     }
 
     @Post()
-    async create(
-        @Ctx() { currentUser }: LCContext,
-        @Body() body: SessionModel
-    ): Promise<SessionModel> {
-        if (!currentUser) throw new UnauthorizedError();
+    @Authorized()
+    @HttpCode(201)
+    @ResponseSchema(Session)
+    async create(@CurrentUser() createdBy: User, @Body() body: Session) {
+        const session = await sessionStore.save({ ...body, createdBy });
 
-        const session = new Session().setACL(await createAdminACL(currentUser));
+        await ActivityLogController.logCreate(createdBy, 'Session', session.id);
 
-        await session.save({ ...body, owner: currentUser });
-
-        return session.toJSON();
+        return session;
     }
 
     @Get('/:id')
-    async getOne(@Param('id') id: string): Promise<SessionModel> {
-        const session = await new Query(Session).get(id);
-
-        return session.toJSON();
+    @OnNull(404)
+    @ResponseSchema(Session)
+    getOne(@Param('id') id: number) {
+        return sessionStore.findOneBy({ id });
     }
 
-    @Patch('/:id')
-    async edit(
-        @Ctx() { currentUser }: LCContext,
-        @Param('id') id: string,
-        @Body() body: SessionModel
-    ): Promise<SessionModel> {
-        if (!currentUser) throw new UnauthorizedError();
+    @Put('/:id')
+    @Authorized()
+    @ResponseSchema(Session)
+    async edit(@CurrentUser() updatedBy: User, @Param('id') id: number, @Body() body: Session) {
+        await ActivitySessionController.assertOwner(id, updatedBy);
 
-        const session = LCObject.createWithoutData('Session', id);
+        const session = await sessionStore.save({ ...body, id, updatedBy });
 
-        await session.save({ ...body, owner: currentUser });
+        await ActivityLogController.logUpdate(updatedBy, 'Session', session.id);
 
-        return session.toJSON();
+        return session;
     }
 }

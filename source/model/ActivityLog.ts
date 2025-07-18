@@ -1,15 +1,10 @@
 import { Type } from 'class-transformer';
-import {
-    IsEnum,
-    IsInt,
-    IsObject,
-    IsOptional,
-    Min,
-    ValidateNested
-} from 'class-validator';
+import { IsEnum, IsInt, IsObject, IsOptional, Min, ValidateNested } from 'class-validator';
 import { Column, Entity, ViewColumn, ViewEntity } from 'typeorm';
 
+import { Activity, Cooperation, Session, SessionSubmit } from './Activity';
 import { Base, BaseFilter, InputData, ListChunk } from './Base';
+import { Membership, Organization, Place } from './Organization';
 import { User, UserBase } from './User';
 import { UserCredential } from './WebAuthn';
 
@@ -19,7 +14,17 @@ export enum Operation {
     Delete = 'delete'
 }
 
-export const LogableTable = { User, UserCredential };
+export const LogableTable = {
+    User,
+    UserCredential,
+    Place,
+    Organization,
+    Membership,
+    Activity,
+    Cooperation,
+    Session,
+    SessionSubmit
+};
 
 const LogableTableEnum = Object.fromEntries(
     Object.entries(LogableTable).map(([key]) => [key, key])
@@ -45,10 +50,7 @@ export class ActivityLog extends UserBase {
     record?: Base;
 }
 
-export class ActivityLogFilter
-    extends BaseFilter
-    implements Partial<InputData<ActivityLog>>
-{
+export class ActivityLogFilter extends BaseFilter implements Partial<InputData<ActivityLog>> {
     @IsEnum(Operation)
     @IsOptional()
     operation?: Operation;
