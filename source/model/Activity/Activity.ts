@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { Column, Entity, ManyToOne } from 'typeorm';
 
-import { ListChunk } from '../Base';
+import { BaseFilter, InputData, ListChunk } from '../Base';
 import { OrganizationBase } from '../Organization';
 
 @Entity()
@@ -47,6 +47,13 @@ export abstract class ActivityBase extends OrganizationBase {
     @IsOptional()
     @ManyToOne(() => Activity)
     activity: Activity;
+}
+
+export class ActivityBaseFilter extends BaseFilter implements Partial<InputData<ActivityBase>> {
+    @IsInt()
+    @Min(1)
+    @IsOptional()
+    activity?: number;
 }
 
 export class ActivityListChunk implements ListChunk<Activity> {

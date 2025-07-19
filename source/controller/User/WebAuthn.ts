@@ -1,12 +1,6 @@
 import { server } from '@passwordless-id/webauthn';
 import { CollectedClientData } from '@passwordless-id/webauthn/dist/esm/types';
-import {
-    BadRequestError,
-    Body,
-    HttpCode,
-    JsonController,
-    Post
-} from 'routing-controllers';
+import { BadRequestError, Body, HttpCode, JsonController, Post } from 'routing-controllers';
 import { ResponseSchema } from 'routing-controllers-openapi';
 
 import {
@@ -16,7 +10,7 @@ import {
     WebAuthnAuthentication,
     WebAuthnChallenge,
     WebAuthnRegistration
-} from '../model';
+} from '../../model';
 import { ActivityLogController } from './ActivityLog';
 import { UserController } from './User';
 
@@ -62,20 +56,14 @@ export class WebAuthnController {
             userVerified
         } as UserCredential);
 
-        await ActivityLogController.logCreate(
-            createdBy,
-            'UserCredential',
-            saved.id
-        );
+        await ActivityLogController.logCreate(createdBy, 'UserCredential', saved.id);
         return UserController.sign(createdBy);
     }
 
     @Post('/authentication')
     @HttpCode(201)
     @ResponseSchema(User)
-    async signIn(
-        @Body() { challenge, ...authentication }: WebAuthnAuthentication
-    ) {
+    async signIn(@Body() { challenge, ...authentication }: WebAuthnAuthentication) {
         const userCredential = await credentialStore.findOne({
             where: { uuid: authentication.id },
             relations: ['createdBy']

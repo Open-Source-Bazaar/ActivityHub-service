@@ -18,7 +18,7 @@ import { ParameterizedContext } from 'koa';
 import { NewData } from 'mobx-restful';
 import { Column, Entity, ManyToOne } from 'typeorm';
 
-import { Base, BaseFilter, InputData, ListChunk } from './Base';
+import { Base, BaseFilter, InputData, ListChunk } from '../Base';
 
 export enum Gender {
     Female = 0,
@@ -79,9 +79,7 @@ export class SignUpData
 }
 
 export interface JWTAction {
-    context?: ParameterizedContext<
-        { jwtOriginalError: JsonWebTokenError } | { user: User }
-    >;
+    context?: ParameterizedContext<{ jwtOriginalError: JsonWebTokenError } | { user: User }>;
 }
 
 @Entity()
@@ -150,10 +148,7 @@ export abstract class UserBase extends Base {
     deletedBy?: User;
 }
 
-export class UserBaseFilter
-    extends BaseFilter
-    implements Partial<InputData<UserBase>>
-{
+export class UserBaseFilter extends BaseFilter implements Partial<InputData<UserBase>> {
     @IsInt()
     @Min(1)
     @IsOptional()

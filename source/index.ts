@@ -6,13 +6,7 @@ import KoaLogger from 'koa-logger';
 import { useKoaServer } from 'routing-controllers';
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
 
-import {
-    BaseController,
-    controllers,
-    mocker,
-    swagger,
-    UserController
-} from './controller';
+import { BaseController, controllers, mocker, swagger, UserController } from './controller';
 import { dataSource } from './model';
 import { APP_SECRET, HTTP_PROXY, isProduct, PORT } from './utility';
 

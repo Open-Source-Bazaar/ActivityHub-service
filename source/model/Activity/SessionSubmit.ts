@@ -1,13 +1,13 @@
 import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsInt, IsOptional, Min, ValidateNested } from 'class-validator';
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 
-import { ListChunk } from '../Base';
+import { InputData, ListChunk } from '../Base';
 import { User } from '../User';
-import { ActivityBase } from './Activity';
+import { ActivityBase, ActivityBaseFilter } from './Activity';
 
 @Entity()
-export class SessionSubmit extends ActivityBase {
+export class Agenda extends ActivityBase {
     @Type(() => User)
     @Transform(({ value }) => (Array.isArray(value) ? value.map(user => User.from(user)) : value))
     @ValidateNested()
@@ -21,12 +21,28 @@ export class SessionSubmit extends ActivityBase {
     adopted?: boolean;
 }
 
-export class SessionSubmitListChunk implements ListChunk<SessionSubmit> {
+export abstract class AgendaBase extends ActivityBase {
+    @Type(() => Agenda)
+    @Transform(({ value }) => Agenda.from(value))
+    @ValidateNested()
+    @IsOptional()
+    @ManyToOne(() => Agenda)
+    agenda: Agenda;
+}
+
+export class AgendaBaseFilter extends ActivityBaseFilter implements Partial<InputData<AgendaBase>> {
+    @IsInt()
+    @Min(1)
+    @IsOptional()
+    agenda?: number;
+}
+
+export class AgendaListChunk implements ListChunk<Agenda> {
     @IsInt()
     @Min(0)
     count: number;
 
-    @Type(() => SessionSubmit)
+    @Type(() => Agenda)
     @ValidateNested({ each: true })
-    list: SessionSubmit[];
+    list: Agenda[];
 }

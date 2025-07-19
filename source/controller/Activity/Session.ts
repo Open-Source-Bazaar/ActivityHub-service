@@ -14,7 +14,7 @@ import {
 import { ResponseSchema } from 'routing-controllers-openapi';
 
 import { dataSource, Session, User } from '../../model';
-import { ActivityLogController } from '../ActivityLog';
+import { ActivityLogController } from '../User';
 
 const sessionStore = dataSource.getRepository(Session);
 

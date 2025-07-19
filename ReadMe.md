@@ -51,13 +51,13 @@
 
 - [x] [Session](source/model/Activity/Session.ts) 活动环节（演讲、实训等）
 
-- [x] [SessionSubmit](source/model/Activity/SessionSubmit.ts) 环节申报（Activity 与 Session）
+- [x] [Agenda](source/model/Activity/Agenda.ts) 环节申报（Activity 与 Session）
 
 - [ ] Ticket 门票类别（单 Activity、多 Session）
 
 - [ ] TicketOrder 门票订单（User 与 Ticket）
 
-- [ ] SessionSignin 环节签到（Session 与 TicketOrder）
+- [x] [CheckEvent](source/model/Activity/CheckEvent.ts) 环节打卡（User 与 Agenda）
 
 ### 第二版
 
