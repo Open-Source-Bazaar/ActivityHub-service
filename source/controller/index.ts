@@ -5,30 +5,25 @@ import { isProduct } from '../utility';
 import {
     ActivityController,
     ActivitySessionController,
-    CooperationController,
-    SessionSubmitController
-} from './Activity';
-import { ActivityLogController } from './ActivityLog';
+    AgendaController,
+    CheckEventController,
+    CooperationController} from './Activity';
 import { BaseController } from './Base';
 import { FileController } from './File';
-import { OauthController } from './OAuth';
 import { OrganizationController, PlaceController } from './Organization';
-import { UserController } from './User';
-import { WebAuthnController } from './WebAuthn';
+import { ActivityLogController, OauthController, UserController,WebAuthnController } from './User';
 
 export * from './Activity';
-export * from './ActivityLog';
 export * from './Base';
 export * from './File';
-export * from './OAuth';
 export * from './Organization';
 export * from './User';
-export * from './WebAuthn';
 
 export const controllers = [
-    CooperationController,
-    SessionSubmitController,
+    CheckEventController,
+    AgendaController,
     ActivitySessionController,
+    CooperationController,
     ActivityController,
     PlaceController,
     OrganizationController,
@@ -39,7 +34,4 @@ export const controllers = [
     FileController,
     BaseController
 ];
-export const { swagger, mocker, router } = createAPI({
-    mock: !isProduct,
-    controllers
-});
+export const { swagger, mocker, router } = createAPI({ mock: !isProduct, controllers });

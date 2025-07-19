@@ -3,20 +3,15 @@ import { DataSource } from 'typeorm';
 import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionOptions';
 
 import { DATABASE_URL, isProduct } from '../utility';
-import { Activity, Cooperation, Session, SessionSubmit } from './Activity';
-import { ActivityLog } from './ActivityLog';
+import { Activity, Agenda, CheckEvent,Cooperation, Session } from './Activity';
 import { Membership, Organization, Place } from './Organization';
-import { User } from './User';
-import { UserCredential } from './WebAuthn';
+import { ActivityLog, User, UserCredential } from './User';
 
 export * from './Activity';
-export * from './ActivityLog';
 export * from './Base';
 export * from './File';
-export * from './OAuth';
 export * from './Organization';
 export * from './User';
-export * from './WebAuthn';
 
 const { ssl, host, port, user, password, database } = isProduct
     ? parse(DATABASE_URL)
@@ -32,7 +27,8 @@ const entities = [
     Activity,
     Cooperation,
     Session,
-    SessionSubmit
+    Agenda,
+    CheckEvent
 ];
 
 const commonOptions: Pick<

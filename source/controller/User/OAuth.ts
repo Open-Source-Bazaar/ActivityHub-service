@@ -3,7 +3,7 @@ import { Body, HttpCode, JsonController, Post } from 'routing-controllers';
 import { ResponseSchema } from 'routing-controllers-openapi';
 import { isDeepStrictEqual } from 'util';
 
-import { dataSource, OAuthSignInData, User } from '../model';
+import { dataSource, OAuthSignInData, User } from '../../model';
 import { ActivityLogController } from './ActivityLog';
 import { UserController } from './User';
 

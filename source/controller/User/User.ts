@@ -29,8 +29,8 @@ import {
     User,
     UserFilter,
     UserListChunk
-} from '../model';
-import { APP_SECRET, searchConditionOf, supabase } from '../utility';
+} from '../../model';
+import { APP_SECRET, searchConditionOf, supabase } from '../../utility';
 import { ActivityLogController } from './ActivityLog';
 
 const userStore = dataSource.getRepository(User),

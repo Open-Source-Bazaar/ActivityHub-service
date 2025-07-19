@@ -2,9 +2,9 @@ import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsObject, IsOptional, Min, ValidateNested } from 'class-validator';
 import { Column, Entity, ViewColumn, ViewEntity } from 'typeorm';
 
-import { Activity, Cooperation, Session, SessionSubmit } from './Activity';
-import { Base, BaseFilter, InputData, ListChunk } from './Base';
-import { Membership, Organization, Place } from './Organization';
+import { Activity, Agenda, CheckEvent,Cooperation, Session } from '../Activity';
+import { Base, BaseFilter, InputData, ListChunk } from '../Base';
+import { Membership, Organization, Place } from '../Organization';
 import { User, UserBase } from './User';
 import { UserCredential } from './WebAuthn';
 
@@ -23,7 +23,8 @@ export const LogableTable = {
     Activity,
     Cooperation,
     Session,
-    SessionSubmit
+    Agenda,
+    CheckEvent
 };
 
 const LogableTableEnum = Object.fromEntries(

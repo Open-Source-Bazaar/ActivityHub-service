@@ -14,7 +14,7 @@ import { ResponseSchema } from 'routing-controllers-openapi';
 
 import { BaseFilter, dataSource, Organization, Place, PlaceListChunk, User } from '../../model';
 import { searchConditionOf } from '../../utility';
-import { ActivityLogController } from '../ActivityLog';
+import { ActivityLogController } from '../User';
 import { OrganizationController } from './Organization';
 
 const placeStore = dataSource.getRepository(Place);

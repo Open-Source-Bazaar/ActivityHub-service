@@ -14,7 +14,7 @@ import { ResponseSchema } from 'routing-controllers-openapi';
 
 import { BaseFilter, Cooperation, CooperationListChunk, dataSource, User } from '../../model';
 import { searchConditionOf } from '../../utility';
-import { ActivityLogController } from '../ActivityLog';
+import { ActivityLogController } from '../User';
 import { ActivityController } from './Activity';
 
 const cooperationStore = dataSource.getRepository(Cooperation);

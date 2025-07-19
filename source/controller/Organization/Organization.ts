@@ -27,7 +27,7 @@ import {
     User
 } from '../../model';
 import { searchConditionOf } from '../../utility';
-import { ActivityLogController } from '../ActivityLog';
+import { ActivityLogController } from '../User';
 
 const organizationStore = dataSource.getRepository(Organization),
     memberStore = dataSource.getRepository(Membership);

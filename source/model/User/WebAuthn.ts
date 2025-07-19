@@ -47,9 +47,7 @@ export class WebAuthnUser implements UserInfo {
     displayName: string;
 }
 
-export abstract class WebAuthnBase
-    implements Omit<RegistrationJSON, 'response' | 'user'>
-{
+export abstract class WebAuthnBase implements Omit<RegistrationJSON, 'response' | 'user'> {
     @IsEnum(CredentialType)
     type: CredentialType;
 
@@ -70,10 +68,7 @@ export abstract class WebAuthnBase
     challenge: string;
 }
 
-export class WebAuthnRegistration
-    extends WebAuthnBase
-    implements RegistrationJSON
-{
+export class WebAuthnRegistration extends WebAuthnBase implements RegistrationJSON {
     @IsObject()
     response: AuthenticatorAttestationResponseJSON;
 
@@ -82,10 +77,7 @@ export class WebAuthnRegistration
     user: WebAuthnUser;
 }
 
-export class WebAuthnAuthentication
-    extends WebAuthnBase
-    implements AuthenticationJSON
-{
+export class WebAuthnAuthentication extends WebAuthnBase implements AuthenticationJSON {
     @IsObject()
     response: AuthenticatorAssertionResponseJSON;
 }

@@ -16,8 +16,8 @@ import { ResponseSchema } from 'routing-controllers-openapi';
 
 import { Activity, ActivityListChunk, BaseFilter, dataSource, MemberRole, User } from '../../model';
 import { searchConditionOf } from '../../utility';
-import { ActivityLogController } from '../ActivityLog';
 import { OrganizationController } from '../Organization';
+import { ActivityLogController } from '../User';
 
 const activityStore = dataSource.getRepository(Activity);
 
