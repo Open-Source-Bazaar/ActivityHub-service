@@ -19,11 +19,22 @@ import {
 } from 'routing-controllers';
 import { ResponseSchema } from 'routing-controllers-openapi';
 
-import { dataSource, JWTAction, Role, SignInData, User, UserFilter, UserListChunk } from '../model';
+import {
+    dataSource,
+    JWTAction,
+    Membership,
+    Organization,
+    Role,
+    SignInData,
+    User,
+    UserFilter,
+    UserListChunk
+} from '../model';
 import { APP_SECRET, searchConditionOf, supabase } from '../utility';
 import { ActivityLogController } from './ActivityLog';
 
-const store = dataSource.getRepository(User);
+const userStore = dataSource.getRepository(User),
+    memberStore = dataSource.getRepository(Membership);
 
 @JsonController('/user')
 export class UserController {
@@ -38,9 +49,9 @@ export class UserController {
     });
 
     static async signUp({ email, password }: SignInData) {
-        const sum = await store.count();
+        const sum = await userStore.count();
 
-        const { password: _, ...user } = await store.save({
+        const { password: _, ...user } = await userStore.save({
             name: email,
             email,
             password: UserController.encrypt(password),
@@ -73,7 +84,7 @@ export class UserController {
     @HttpCode(201)
     @ResponseSchema(User)
     async signIn(@Body() { email, password }: SignInData): Promise<User> {
-        let user = await store.findOneBy({
+        let user = await userStore.findOneBy({
             email,
             password: UserController.encrypt(password)
         });
@@ -87,7 +98,7 @@ export class UserController {
             if (error) throw new HttpError(error.status, error.message);
 
             user =
-                (await store.findOneBy({ email })) ||
+                (await userStore.findOneBy({ email })) ||
                 (await this.signUp({ email, password: data.user.id }));
         }
         return UserController.sign(user);
@@ -111,7 +122,7 @@ export class UserController {
         if (!updatedBy.roles.includes(Role.Administrator) && id !== updatedBy.id)
             throw new ForbiddenError();
 
-        const saved = await store.save({
+        const saved = await userStore.save({
             ...data,
             password: password && UserController.encrypt(password),
             id
@@ -125,7 +136,7 @@ export class UserController {
     @OnNull(404)
     @ResponseSchema(User)
     getOne(@Param('id') id: number) {
-        return store.findOneBy({ id });
+        return userStore.findOneBy({ id });
     }
 
     @Delete('/:id')
@@ -135,7 +146,7 @@ export class UserController {
         if (deletedBy.roles.includes(Role.Administrator) && id == deletedBy.id)
             throw new ForbiddenError();
 
-        await store.softDelete(id);
+        await userStore.softDelete(id);
 
         await ActivityLogController.logDelete(deletedBy, 'User', id);
     }
@@ -148,11 +159,21 @@ export class UserController {
             keywords,
             gender && { gender }
         );
-        const [list, count] = await store.findAndCount({
+        const [list, count] = await userStore.findAndCount({
             where,
             skip: pageSize * (pageIndex - 1),
             take: pageSize
         });
         return { list, count };
+    }
+
+    @Get('/:id/organization')
+    @ResponseSchema(Organization, { isArray: true })
+    async getOrganizationList(@Param('id') id: number) {
+        const list = await memberStore.find({
+            where: { user: { id } },
+            relations: ['organization']
+        });
+        return list.map(({ organization }) => organization);
     }
 }
