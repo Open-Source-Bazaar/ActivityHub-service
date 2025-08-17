@@ -3,7 +3,7 @@ package-lock.json
 yarn.lock
 test/client.ts
 dist/
-type/*.d.ts
+type/**/*.d.ts
 .env*
 !.env.example
 .data/

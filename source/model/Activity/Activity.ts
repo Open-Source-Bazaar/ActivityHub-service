@@ -20,11 +20,11 @@ export class Activity extends OrganizationBase {
     title: string;
 
     @IsDateString()
-    @Column('datetime')
+    @Column('date')
     startTime: string;
 
     @IsDateString()
-    @Column('datetime')
+    @Column('date')
     endTime: string;
 
     @Length(3)
