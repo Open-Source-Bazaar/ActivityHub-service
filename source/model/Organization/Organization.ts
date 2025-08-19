@@ -7,7 +7,8 @@ import {
     Length,
     Matches,
     Min,
-    ValidateNested} from 'class-validator';
+    ValidateNested
+} from 'class-validator';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 import { ListChunk } from '../Base';
@@ -46,7 +47,6 @@ export abstract class OrganizationBase extends UserBase {
     @Type(() => Organization)
     @Transform(({ value }) => Organization.from(value))
     @ValidateNested()
-    @IsOptional()
     @ManyToOne(() => Organization)
     organization: Organization;
 }

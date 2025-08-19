@@ -53,6 +53,8 @@
 
 - [x] [Session](source/model/Activity/Session.ts) 活动环节（演讲、实训等）
 
+- [x] [Forum](source/model/Activity/Forum.ts) 论坛（多 Agenda）
+
 - [x] [Agenda](source/model/Activity/Agenda.ts) 环节申报（Activity 与 Session）
 
 - [ ] Ticket 门票类别（单 Activity、多 Session）

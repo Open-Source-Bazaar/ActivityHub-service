@@ -3,7 +3,7 @@ import { DataSource } from 'typeorm';
 import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionOptions';
 
 import { DATABASE_URL, isProduct } from '../utility';
-import { Activity, Agenda, CheckEvent, Cooperation, Session } from './Activity';
+import { Activity, Agenda, CheckEvent, Cooperation, Forum, Session } from './Activity';
 import { Membership, Organization, Place } from './Organization';
 import { Tag } from './Tag';
 import { ActivityLog, User, UserCredential } from './User';
@@ -27,6 +27,7 @@ const entities = [
     Place,
     Organization,
     Membership,
+    Forum,
     Activity,
     Cooperation,
     Session,

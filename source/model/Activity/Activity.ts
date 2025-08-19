@@ -74,7 +74,6 @@ export abstract class ActivityBase extends OrganizationBase {
     @Type(() => Activity)
     @Transform(({ value }) => Activity.from(value))
     @ValidateNested()
-    @IsOptional()
     @ManyToOne(() => Activity)
     activity: Activity;
 }

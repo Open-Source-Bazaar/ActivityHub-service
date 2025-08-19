@@ -4,10 +4,11 @@ import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 
 import { InputData, ListChunk } from '../Base';
 import { User } from '../User';
-import { ActivityBase, ActivityBaseFilter } from './Activity';
+import { ActivityBaseFilter } from './Activity';
+import { ForumBase } from './Forum';
 
 @Entity()
-export class Agenda extends ActivityBase {
+export class Agenda extends ForumBase {
     @Type(() => User)
     @Transform(({ value }) => (Array.isArray(value) ? value.map(user => User.from(user)) : value))
     @ValidateNested()
@@ -21,7 +22,7 @@ export class Agenda extends ActivityBase {
     adopted?: boolean;
 }
 
-export abstract class AgendaBase extends ActivityBase {
+export abstract class AgendaBase extends ForumBase {
     @Type(() => Agenda)
     @Transform(({ value }) => Agenda.from(value))
     @ValidateNested()
