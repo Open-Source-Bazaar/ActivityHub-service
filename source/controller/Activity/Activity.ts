@@ -82,8 +82,10 @@ export class ActivityController {
     @Get()
     @ResponseSchema(ActivityListChunk)
     async getList(@QueryParams() { keywords, pageSize = 10, pageIndex = 1 }: BaseFilter) {
-        const where = searchConditionOf<Activity>(['title', 'address'], keywords);
-
+        const where = searchConditionOf<Activity>(
+            ['title', 'slug', 'address', 'description'],
+            keywords
+        );
         const [list, count] = await activityStore.findAndCount({
             where,
             skip: pageSize * (pageIndex - 1),

@@ -2,9 +2,10 @@ import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsObject, IsOptional, Min, ValidateNested } from 'class-validator';
 import { Column, Entity, ViewColumn, ViewEntity } from 'typeorm';
 
-import { Activity, Agenda, CheckEvent,Cooperation, Session } from '../Activity';
+import { Activity, Agenda, CheckEvent, Cooperation, Session } from '../Activity';
 import { Base, BaseFilter, InputData, ListChunk } from '../Base';
 import { Membership, Organization, Place } from '../Organization';
+import { Tag } from '../Tag';
 import { User, UserBase } from './User';
 import { UserCredential } from './WebAuthn';
 
@@ -17,6 +18,7 @@ export enum Operation {
 export const LogableTable = {
     User,
     UserCredential,
+    Tag,
     Place,
     Organization,
     Membership,

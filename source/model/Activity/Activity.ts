@@ -3,21 +3,28 @@ import {
     IsDateString,
     IsInt,
     IsOptional,
+    IsString,
     IsUrl,
     Length,
     Min,
     ValidateNested
 } from 'class-validator';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 
 import { BaseFilter, InputData, ListChunk } from '../Base';
 import { OrganizationBase } from '../Organization';
+import { Tag } from '../Tag';
 
 @Entity()
 export class Activity extends OrganizationBase {
     @Length(3)
     @Column()
     title: string;
+
+    @IsString()
+    @IsOptional()
+    @Column({ nullable: true })
+    slug?: string;
 
     @IsDateString()
     @Column('date')
@@ -28,16 +35,39 @@ export class Activity extends OrganizationBase {
     endTime: string;
 
     @Length(3)
+    @IsOptional()
     @Column({ nullable: true })
     address?: string;
 
     @IsUrl()
+    @IsOptional()
     @Column({ nullable: true })
-    url?: string;
+    liveLink?: string;
 
     @IsUrl()
+    @IsOptional()
     @Column({ nullable: true })
     banner?: string;
+
+    @Type(() => Tag)
+    @Transform(({ value }) => (Array.isArray(value) ? value.map(user => Tag.from(user)) : value))
+    @ValidateNested({ each: true })
+    @IsOptional()
+    @ManyToMany(() => Tag)
+    @JoinTable()
+    tags?: Tag[];
+
+    @IsString()
+    @Column()
+    description: string;
+
+    @Type(() => Tag)
+    @Transform(({ value }) => (Array.isArray(value) ? value.map(user => Tag.from(user)) : value))
+    @ValidateNested({ each: true })
+    @IsOptional()
+    @ManyToMany(() => Tag)
+    @JoinTable()
+    cooperationLevels?: Tag[];
 }
 
 export abstract class ActivityBase extends OrganizationBase {

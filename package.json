@@ -113,7 +113,7 @@
         "jest": "jest",
         "debug": "server-test start-test 8080 jest",
         "test": "npm run build  &&  server-test start-test 8080 build-test  &&  npm run debug",
-        "pack-type": "tsc --emitDeclarationOnly --outDir type/  &&  cd type/  &&  rm -rf controller/ *.d.ts  &&  mv -f model/* .  &&  rm -rf model/",
+        "pack-type": "tsc --emitDeclarationOnly --outDir type/  &&  cd type/  &&  rm -rf controller/ *.d.ts  &&  cp -rf model/* .  &&  rm -rf model/",
         "build": "rm -rf dist/ type/*.d.ts  &&  tsc  &&  npm run pack-type",
         "start": "cross-env NODE_ENV=production  node dist/",
         "typeorm": "typeorm-ts-node-commonjs -d source/model/index.ts",

@@ -7,11 +7,13 @@ import {
     ActivitySessionController,
     AgendaController,
     CheckEventController,
-    CooperationController} from './Activity';
+    CooperationController
+} from './Activity';
 import { BaseController } from './Base';
 import { FileController } from './File';
 import { OrganizationController, PlaceController } from './Organization';
-import { ActivityLogController, OauthController, UserController,WebAuthnController } from './User';
+import { TagController } from './Tag';
+import { ActivityLogController, OauthController, UserController, WebAuthnController } from './User';
 
 export * from './Activity';
 export * from './Base';
@@ -27,6 +29,7 @@ export const controllers = [
     ActivityController,
     PlaceController,
     OrganizationController,
+    TagController,
     WebAuthnController,
     OauthController,
     UserController,

@@ -39,6 +39,8 @@
 
 - [x] [User](source/model/User.ts) 组织者、讲师、合作方联系人、志愿者等
 
+- [x] [Tag](source/model/Tag.ts) 标签、赞助级别等
+
 - [x] [Organization](source/model/Organization/Organization.ts) 主办、协办、场地、赞助、媒体、展商等
 
 - [x] [Membership](source/model/Organization/Membership.ts) 组织关系（User 与 Organization）

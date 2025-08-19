@@ -3,14 +3,16 @@ import { DataSource } from 'typeorm';
 import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionOptions';
 
 import { DATABASE_URL, isProduct } from '../utility';
-import { Activity, Agenda, CheckEvent,Cooperation, Session } from './Activity';
+import { Activity, Agenda, CheckEvent, Cooperation, Session } from './Activity';
 import { Membership, Organization, Place } from './Organization';
+import { Tag } from './Tag';
 import { ActivityLog, User, UserCredential } from './User';
 
 export * from './Activity';
 export * from './Base';
 export * from './File';
 export * from './Organization';
+export * from './Tag';
 export * from './User';
 
 const { ssl, host, port, user, password, database } = isProduct
@@ -21,6 +23,7 @@ const entities = [
     User,
     UserCredential,
     ActivityLog,
+    Tag,
     Place,
     Organization,
     Membership,
