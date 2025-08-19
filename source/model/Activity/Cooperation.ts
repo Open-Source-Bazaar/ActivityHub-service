@@ -1,26 +1,25 @@
 import { Transform, Type } from 'class-transformer';
-import { IsInt, IsPositive, Length, Min, ValidateNested } from 'class-validator';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { IsInt, Min, ValidateNested } from 'class-validator';
+import { Entity, ManyToOne } from 'typeorm';
 
 import { ListChunk } from '../Base';
-import { User } from '../User';
+import { Organization } from '../Organization';
+import { Tag } from '../Tag';
 import { ActivityBase } from './Activity';
 
 @Entity()
 export class Cooperation extends ActivityBase {
-    @IsPositive()
-    @Column('int')
-    level: number;
-
-    @Length(3)
-    @Column()
-    title: string;
-
-    @Type(() => User)
-    @Transform(({ value }) => User.from(value))
+    @Type(() => Tag)
+    @Transform(({ value }) => Tag.from(value))
     @ValidateNested()
-    @ManyToOne(() => User)
-    contact: User;
+    @ManyToOne(() => Tag)
+    level: Tag;
+
+    @Type(() => Organization)
+    @Transform(({ value }) => Organization.from(value))
+    @ValidateNested()
+    @ManyToOne(() => Organization)
+    partner: Organization;
 }
 
 export class CooperationListChunk implements ListChunk<Cooperation> {
