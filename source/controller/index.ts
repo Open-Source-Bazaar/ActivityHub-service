@@ -7,7 +7,8 @@ import {
     ActivitySessionController,
     AgendaController,
     CheckEventController,
-    CooperationController
+    CooperationController,
+    ForumController
 } from './Activity';
 import { BaseController } from './Base';
 import { FileController } from './File';
@@ -24,6 +25,7 @@ export * from './User';
 export const controllers = [
     CheckEventController,
     AgendaController,
+    ForumController,
     ActivitySessionController,
     CooperationController,
     ActivityController,

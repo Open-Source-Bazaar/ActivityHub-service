@@ -2,7 +2,7 @@ import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsObject, IsOptional, Min, ValidateNested } from 'class-validator';
 import { Column, Entity, ViewColumn, ViewEntity } from 'typeorm';
 
-import { Activity, Agenda, CheckEvent, Cooperation, Session } from '../Activity';
+import { Activity, Agenda, CheckEvent, Cooperation, Forum, Session } from '../Activity';
 import { Base, BaseFilter, InputData, ListChunk } from '../Base';
 import { Membership, Organization, Place } from '../Organization';
 import { Tag } from '../Tag';
@@ -23,6 +23,7 @@ export const LogableTable = {
     Organization,
     Membership,
     Activity,
+    Forum,
     Cooperation,
     Session,
     Agenda,

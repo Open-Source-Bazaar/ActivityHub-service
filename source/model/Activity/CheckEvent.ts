@@ -4,7 +4,7 @@ import { Column, Entity, ManyToOne, ViewColumn, ViewEntity } from 'typeorm';
 
 import { ListChunk } from '../Base';
 import { User } from '../User';
-import { AgendaBase, AgendaBaseFilter } from './SessionSubmit';
+import { AgendaBase, AgendaBaseFilter } from './Agenda';
 
 @Entity()
 export class CheckEvent extends AgendaBase {
