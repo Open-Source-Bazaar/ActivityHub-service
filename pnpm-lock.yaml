@@ -105,8 +105,8 @@ importers:
         specifier: ^0.3.25
         version: 0.3.25(better-sqlite3@12.2.0)(pg@8.16.3)(reflect-metadata@0.2.2)(ts-node@10.9.2(@types/node@22.17.2)(typescript@5.9.2))
       undici:
-        specifier: ^7.14.0
-        version: 7.14.0
+        specifier: ^7.18.2
+        version: 7.18.2
       web-utility:
         specifier: ^4.5.1
         version: 4.5.1(typescript@5.9.2)
@@ -743,10 +743,12 @@ packages:
   '@koa/router@13.1.1':
     resolution: {integrity: sha512-JQEuMANYRVHs7lm7KY9PCIjkgJk73h4m4J+g2mkw2Vo1ugPZ17UJVqEH8F+HeAdjKz5do1OaLe7ArDz+z308gw==}
     engines: {node: '>= 18'}
+    deprecated: Please upgrade to v15 or higher. All reported bugs in this version are fixed in newer releases, dependencies have been updated, and security has been improved.
 
   '@koa/router@14.0.0':
     resolution: {integrity: sha512-LBSu5K0qAaaQcXX/0WIB9PGDevyCxxpnc1uq13vV/CgObaVxuis5hKl3Eboq/8gcb6ebnkAStW9NB/Em2eYyFA==}
     engines: {node: '>= 20'}
+    deprecated: Please upgrade to v15 or higher. All reported bugs in this version are fixed in newer releases, dependencies have been updated, and security has been improved.
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1030,6 +1032,7 @@ packages:
 
   '@tech_query/node-toolkit@1.2.1':
     resolution: {integrity: sha512-XFw0EVc8LCcC+CNo+lCxi+5iiPzQyubz41rP4iNuMueN+kjn/KMliaHKLZ5kAnCi+HxmuJPmzrSi6vZtuP07Hg==}
+    deprecated: Don't use versions with old API & bugs
     peerDependencies:
       '@babel/plugin-transform-modules-commonjs': ^7.0.0
       '@babel/preset-env': ^7.0.0
@@ -1590,6 +1593,7 @@ packages:
 
   commander-jsx@0.6.9:
     resolution: {integrity: sha512-E/wSYQhT7kgqd98WW8sdRiM+3i+J9Z30NOBTCdfD88p2k/po4+JEzikqOECKA1OouTqnAuIgdg5aKGbjq5B0jg==}
+    deprecated: Don't use versions with old API & bugs
 
   commander@14.0.0:
     resolution: {integrity: sha512-2uM9rYjPvyq39NwLRqaiLtWHyDC1FvryJDa2ATTVims5YAS4PupsEQsDvP14FqhFr0P49CYDugi59xaxJlTXRA==}
@@ -2102,6 +2106,7 @@ packages:
 
   get-git-folder@0.1.2:
     resolution: {integrity: sha512-LYf1bS5g3PH71uGLVe3jR2jZm2DbJjoQk7w99WAR7fsdzqEuzGUGqFiVszTHTUXGp+N0gT+kLKhy9isUhM5a2Q==}
+    deprecated: Please upgrade `get-git-folder` to `git-utility download` command
     hasBin: true
 
   get-intrinsic@1.3.0:
@@ -2560,6 +2565,7 @@ packages:
   keygrip@1.1.0:
     resolution: {integrity: sha512-iYSchDJ+liQ8iwbSI2QqsQOvqv58eJCEanyJPJi+Khyu8smkcKSFUCbPwzFcL7YVtZ6eONjqRX/38caJ7QjRAQ==}
     engines: {node: '>= 0.6'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -2827,6 +2833,7 @@ packages:
 
   mobx-github@0.3.11:
     resolution: {integrity: sha512-xbad5SNMmVJBKoWTnkUxzObSWQI/olk3Iy6ai2LWEbou2hfpQVre0/FaejQs593cNyheQl1RULdKctOcB4EbyQ==}
+    deprecated: Don't use versions with old API & bugs
 
   mobx-restful@2.1.0:
     resolution: {integrity: sha512-5fuTDldCPwU+Ji/ea5UGza8Nd1FbM4qEI5w+e/SESTrimchcAx8nvO4zWuNB/OEm3dsVqo8eMASdhnaJ5FRS8g==}
@@ -3832,8 +3839,8 @@ packages:
   undici-types@7.10.0:
     resolution: {integrity: sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag==}
 
-  undici@7.14.0:
-    resolution: {integrity: sha512-Vqs8HTzjpQXZeXdpsfChQTlafcMQaaIwnGwLam1wudSSjlJeQ3bw1j+TLPePgrCnCpUXx7Ba5Pdpf5OBih62NQ==}
+  undici@7.18.2:
+    resolution: {integrity: sha512-y+8YjDFzWdQlSE9N5nzKMT3g4a5UBX1HKowfdXh0uvAnTaqqwqB92Jt4UXBAeKekDs5IaDKyJFR4X1gYVCgXcw==}
     engines: {node: '>=20.18.1'}
 
   universalify@2.0.1:
@@ -3904,6 +3911,7 @@ packages:
 
   web-utility@4.5.1:
     resolution: {integrity: sha512-Yy9m6GiYKFLbqHVYbH8S/c3bSJUs5iv0XVCWYjZp/lANOuAQX28+bief7UHY4MLdaZuMBmHs4MqrwxfS8bcvRQ==}
+    deprecated: Don't use versions with old API & bugs
     peerDependencies:
       element-internals-polyfill: '>=1'
       typescript: '>=4.1'
@@ -8661,7 +8669,7 @@ snapshots:
 
   undici-types@7.10.0: {}
 
-  undici@7.14.0: {}
+  undici@7.18.2: {}
 
   universalify@2.0.1: {}
 
